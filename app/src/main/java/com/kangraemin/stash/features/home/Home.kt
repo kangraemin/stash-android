@@ -32,6 +32,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.kangraemin.stash.domain.model.ContentType
 import com.kangraemin.stash.domain.model.SavedContent
+import com.kangraemin.stash.features.common.EmptyStateView
+import com.kangraemin.stash.features.common.ErrorStateView
 import com.kangraemin.stash.ui.theme.StashTheme
 import com.slack.circuit.codegen.annotations.CircuitInject
 import dagger.hilt.components.SingletonComponent
@@ -65,19 +67,10 @@ fun Home(state: HomeScreen.State, modifier: Modifier = Modifier) {
                 selected = state.selectedFilter,
                 onSelected = { state.eventSink(HomeScreen.Event.OnFilterSelected(it)) },
             )
-            if (state.contents.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(32.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = "저장된 콘텐츠가 없습니다.\n다른 앱에서 공유하여 콘텐츠를 저장해보세요.",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-                }
+            if (state.error != null) {
+                ErrorStateView(message = state.error)
+            } else if (state.contents.isEmpty()) {
+                EmptyStateView(message = "저장된 콘텐츠가 없습니다.\n다른 앱에서 공유하여 콘텐츠를 저장해보세요.")
             } else {
                 LazyVerticalGrid(
                     columns = GridCells.Fixed(2),

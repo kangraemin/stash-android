@@ -36,6 +36,8 @@ import coil.compose.AsyncImage
 import com.kangraemin.stash.domain.contentparsing.DeepLinkHandler
 import com.kangraemin.stash.domain.model.ContentType
 import com.kangraemin.stash.domain.model.SavedContent
+import com.kangraemin.stash.features.common.ErrorStateView
+import com.kangraemin.stash.features.common.LoadingStateView
 import com.kangraemin.stash.ui.theme.StashTheme
 import com.slack.circuit.codegen.annotations.CircuitInject
 import dagger.hilt.components.SingletonComponent
@@ -64,13 +66,13 @@ fun Detail(state: DetailScreen.State, modifier: Modifier = Modifier) {
         val context = LocalContext.current
         val content = state.content
         if (content == null) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentAlignment = Alignment.Center,
-            ) {
-                CircularProgressIndicator()
+            if (state.error != null) {
+                ErrorStateView(
+                    message = state.error,
+                    modifier = Modifier.padding(paddingValues),
+                )
+            } else {
+                LoadingStateView(modifier = Modifier.padding(paddingValues))
             }
         } else {
             DetailContent(

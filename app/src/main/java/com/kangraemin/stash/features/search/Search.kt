@@ -30,6 +30,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.kangraemin.stash.domain.model.ContentType
 import com.kangraemin.stash.domain.model.SavedContent
+import com.kangraemin.stash.features.common.EmptyStateView
+import com.kangraemin.stash.features.common.ErrorStateView
+import com.kangraemin.stash.features.common.LoadingStateView
 import com.kangraemin.stash.features.home.ContentCard
 import com.kangraemin.stash.ui.theme.StashTheme
 import com.slack.circuit.codegen.annotations.CircuitInject
@@ -99,26 +102,13 @@ fun Search(state: SearchScreen.State, modifier: Modifier = Modifier) {
         ) {
             when {
                 state.isLoading -> {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        CircularProgressIndicator()
-                    }
+                    LoadingStateView()
+                }
+                state.error != null -> {
+                    ErrorStateView(message = state.error)
                 }
                 state.query.isNotBlank() && state.results.isEmpty() -> {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(32.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = "검색 결과가 없습니다.",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
+                    EmptyStateView(message = "검색 결과가 없습니다.")
                 }
                 state.results.isNotEmpty() -> {
                     LazyColumn(
