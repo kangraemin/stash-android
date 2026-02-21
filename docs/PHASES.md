@@ -273,14 +273,70 @@ Stash Android 앱의 단계별 개발 계획.
 ---
 
 ## Phase 6: 설정 + 마무리
-상태: 대기 ⏳
+상태: 진행 중 🔄
 
 > 설정 화면, 에러 처리, 접근성, 최종 품질 다듬기.
 
-### 예상 Step (Phase 진입 시 상세화)
-- `SettingsScreen` 구현 (테마 설정, 데이터 관리)
-- 에러 처리 통합 (네트워크 없음, DB 오류 등)
-- 빈 상태 / 로딩 상태 UI 통일
-- 접근성 (contentDescription, 터치 영역)
-- 전체 UI 테스트 + 통합 테스트
-- 성능 최적화 (Compose 리컴포지션, 이미지 캐시)
+### Step 6.1: DataStore 의존성 추가
+- 구현: `gradle/libs.versions.toml`에 `androidx.datastore:datastore-preferences` 추가, `build.gradle.kts`에 implementation 추가
+- 완료 기준: `./gradlew assembleDebug` 빌드 성공
+
+### Step 6.2: ThemeMode 모델 + PreferencesRepository 인터페이스 정의
+- 구현: `domain/model/ThemeMode.kt` — SYSTEM, LIGHT, DARK enum 정의, `domain/repository/PreferencesRepository.kt` — getThemeMode(): Flow\<ThemeMode>, setThemeMode(mode) 인터페이스 정의
+- 완료 기준: 빌드 성공, 순수 Kotlin (외부 의존 없음)
+
+### Step 6.3: PreferencesRepositoryImpl 구현 + Hilt 바인딩
+- 구현: `data/repository/PreferencesRepositoryImpl.kt` — DataStore 기반 ThemeMode 읽기/쓰기, `di/PreferencesModule.kt` — DataStore @Provides + PreferencesRepositoryImpl @Binds
+- 완료 기준: 빌드 성공, Hilt 컴파일 오류 없음
+
+### Step 6.4: StashTheme에 ThemeMode 연동
+- 구현: `MainActivity.kt`에서 PreferencesRepository 주입, ThemeMode Flow 수집하여 StashTheme의 darkTheme 파라미터에 반영 (SYSTEM=시스템 따름, LIGHT=항상 라이트, DARK=항상 다크)
+- 완료 기준: 빌드 성공, 테마 모드에 따라 라이트/다크 전환
+
+### Step 6.5: ContentRepository에 deleteAll 메서드 추가
+- 구현: `ContentDao.kt`에 `@Query("DELETE FROM saved_contents") deleteAll()` 추가, `ContentRepository.kt` 인터페이스에 `deleteAll()` 추가, `ContentRepositoryImpl.kt`에 구현, `FakeContentRepository`에도 구현
+- 완료 기준: 빌드 성공, 기존 테스트 모두 통과
+
+### Step 6.6: SettingsScreen Screen + State + Event 정의
+- 구현: `features/settings/SettingsScreen.kt` — @Parcelize data object SettingsScreen : Screen, State (themeMode, showDeleteAllDialog, eventSink), sealed interface Event (OnThemeModeChanged, OnDeleteAllClicked, OnDeleteAllConfirmed, OnDeleteAllDismissed, OnBackClicked)
+- 완료 기준: 빌드 성공, HomeScreen 패턴과 동일한 구조
+
+### Step 6.7: SettingsPresenter 구현
+- 구현: `features/settings/SettingsPresenter.kt` — @CircuitInject Presenter, PreferencesRepository + ContentRepository + Navigator 주입, 테마 모드 변경 시 PreferencesRepository.setThemeMode() 호출, 전체 삭제 시 확인 다이얼로그 → ContentRepository.deleteAll() 호출
+- 완료 기준: 빌드 성공, @CircuitInject + @Inject constructor 사용
+
+### Step 6.8: 설정 화면 UI 작성
+- 구현: `features/settings/Settings.kt` — @CircuitInject Settings Composable, 테마 선택 섹션 (System/Light/Dark 라디오 버튼), 데이터 관리 섹션 (전체 삭제 버튼), 삭제 확인 AlertDialog, 앱 정보 섹션 (버전), @Preview 포함
+- 완료 기준: 빌드 성공, @Preview 렌더링 가능
+
+### Step 6.9: 홈 → 설정 Navigation 연결
+- 구현: `HomeScreen.kt`의 Event에 OnSettingsClicked 추가, `HomePresenter.kt`에서 navigator.goTo(SettingsScreen) 호출, `Home.kt` 상단 TopAppBar에 설정 아이콘(톱니바퀴) 추가
+- 완료 기준: 빌드 성공, 홈 화면에서 설정 화면으로 이동 가능
+
+### Step 6.10: 설정 관련 단위 테스트
+- 구현: `FakePreferencesRepository` 작성, `SettingsPresenterTest.kt` — Molecule + Turbine 기반, 테마 모드 변경 테스트, 전체 삭제 플로우 테스트 (다이얼로그 표시 → 확인 → 삭제 → 완료), 뒤로가기 테스트
+- 완료 기준: `./gradlew test` 모든 테스트 통과
+
+### Step 6.11: Presenter 에러 상태 추가
+- 구현: HomeScreen.State, SearchScreen.State, DetailScreen.State에 `error: String?` 필드 추가, 각 Presenter에서 데이터 로딩 실패 시 error 상태 반영, DetailPresenter에서 content가 존재하지 않을 때 에러 상태로 전환, 에러 시나리오 테스트 추가
+- 완료 기준: 빌드 성공, 에러 시나리오 테스트 통과
+
+### Step 6.12: 공통 상태 UI 컴포넌트 작성
+- 구현: `features/common/EmptyStateView.kt` — 아이콘 + 메시지 Composable, `features/common/ErrorStateView.kt` — 에러 메시지 + 재시도 버튼 Composable, `features/common/LoadingStateView.kt` — 중앙 CircularProgressIndicator Composable, @Preview 포함
+- 완료 기준: 빌드 성공, @Preview 렌더링 가능
+
+### Step 6.13: 기존 화면에 공통 UI 컴포넌트 적용
+- 구현: Home, Search, Detail 화면의 인라인 빈 상태/로딩/에러 UI를 공통 컴포넌트(EmptyStateView, LoadingStateView, ErrorStateView)로 교체, 일관된 디자인 적용
+- 완료 기준: 빌드 성공, 기존 테스트 모두 통과
+
+### Step 6.14: 접근성 개선
+- 구현: 모든 아이콘/이미지 버튼에 contentDescription 확인 및 누락분 추가, 인터랙티브 요소에 최소 터치 영역 48dp 보장 (Modifier.minimumInteractiveComponentSize), 화면 제목에 semantics { heading() } 적용
+- 완료 기준: 빌드 성공
+
+### Step 6.15: Compose 성능 최적화
+- 구현: Screen State 클래스에 @Immutable 어노테이션 추가, LazyGrid/LazyColumn에 key 파라미터 확인 및 보완, 리컴포지션 방지를 위한 람다 안정성 확인, Coil ImageLoader 설정 (메모리/디스크 캐시 크기 명시)
+- 완료 기준: 빌드 성공
+
+### Step 6.16: Phase 6 전체 빌드 + 테스트 검증
+- 구현: Phase 6 전체 결과물에 대한 최종 빌드 및 테스트 실행, 설정 화면 동작 확인, 에러 처리 동작 확인, 접근성 확인
+- 완료 기준: `./gradlew assembleDebug` + `./gradlew test` 모두 성공
