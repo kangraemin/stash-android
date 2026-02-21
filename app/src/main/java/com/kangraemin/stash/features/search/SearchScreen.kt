@@ -2,12 +2,14 @@ package com.kangraemin.stash.features.search
 
 import android.os.Parcelable
 import com.kangraemin.stash.domain.model.SavedContent
+import androidx.compose.runtime.Immutable
 import com.slack.circuit.runtime.CircuitUiState
 import com.slack.circuit.runtime.screen.Screen
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data object SearchScreen : Screen, Parcelable {
+    @Immutable
     data class State(
         val query: String = "",
         val results: List<SavedContent> = emptyList(),

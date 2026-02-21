@@ -2,12 +2,14 @@ package com.kangraemin.stash.features.settings
 
 import android.os.Parcelable
 import com.kangraemin.stash.domain.model.ThemeMode
+import androidx.compose.runtime.Immutable
 import com.slack.circuit.runtime.CircuitUiState
 import com.slack.circuit.runtime.screen.Screen
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
 data object SettingsScreen : Screen, Parcelable {
+    @Immutable
     data class State(
         val themeMode: ThemeMode = ThemeMode.SYSTEM,
         val showDeleteAllDialog: Boolean = false,
