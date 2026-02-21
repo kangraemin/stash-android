@@ -13,4 +13,5 @@ data class ContentEntity(
     val thumbnailUrl: String?,
     val description: String?,
     val createdAt: Long,
+    val embedding: String? = null,
 )

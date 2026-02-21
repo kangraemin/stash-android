@@ -13,6 +13,7 @@ fun ContentEntity.toDomain(): SavedContent = SavedContent(
     thumbnailUrl = thumbnailUrl,
     description = description,
     createdAt = Instant.ofEpochMilli(createdAt),
+    embedding = embedding?.toFloatList(),
 )
 
 fun SavedContent.toEntity(): ContentEntity = ContentEntity(
@@ -23,4 +24,14 @@ fun SavedContent.toEntity(): ContentEntity = ContentEntity(
     thumbnailUrl = thumbnailUrl,
     description = description,
     createdAt = createdAt.toEpochMilli(),
+    embedding = embedding?.toJsonString(),
 )
+
+fun String.toFloatList(): List<Float> =
+    removeSurrounding("[", "]")
+        .split(",")
+        .filter { it.isNotBlank() }
+        .map { it.trim().toFloat() }
+
+fun List<Float>.toJsonString(): String =
+    joinToString(",", "[", "]")

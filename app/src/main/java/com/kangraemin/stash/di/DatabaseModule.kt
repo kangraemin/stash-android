@@ -20,7 +20,7 @@ object DatabaseModule {
             app,
             StashDatabase::class.java,
             "stash.db",
-        ).build()
+        ).addMigrations(StashDatabase.MIGRATION_1_2).build()
     }
 
     @Provides
