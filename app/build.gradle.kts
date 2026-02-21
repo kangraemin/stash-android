@@ -82,6 +82,9 @@ dependencies {
     implementation(libs.hilt.work)
     ksp(libs.hilt.work.compiler)
 
+    // Browser (Chrome Custom Tab)
+    implementation(libs.androidx.browser)
+
     // Coil
     implementation(libs.coil.compose)
 
