@@ -206,20 +206,69 @@ Stash Android 앱의 단계별 개발 계획.
 ---
 
 ## Phase 5: 검색
-상태: 대기 ⏳
+상태: 진행중 🔄
 
 > 키워드 검색 + ONNX Runtime 기반 온디바이스 시맨틱 검색 구현.
 
-### 예상 Step (Phase 진입 시 상세화)
-- Room LIKE 기반 키워드 검색 DAO 메서드 추가
-- `SearchScreen` Screen + State + Event 정의
-- `SearchPresenter` 구현 (디바운스 키워드 검색)
-- 검색 UI (검색바 + 결과 리스트)
-- ONNX Runtime 모델 로딩 설정
-- 텍스트 임베딩 서비스 구현
-- 벡터 유사도 검색 서비스 구현
-- 키워드 + 시맨틱 검색 결과 병합 랭킹
-- 검색 테스트
+### Step 5.1: Room LIKE 기반 키워드 검색 DAO 메서드 추가
+- 구현: `ContentDao.kt`에 `searchByKeyword(query: String): Flow<List<ContentEntity>>` 메서드 추가 — title, description, url 필드를 LIKE 쿼리로 검색
+- 완료 기준: 빌드 성공, DAO 메서드가 Room 컴파일러 오류 없이 정상 생성
+
+### Step 5.2: ContentRepository에 검색 메서드 추가
+- 구현: `ContentRepository.kt` 인터페이스에 `searchByKeyword(query: String): Flow<List<SavedContent>>` 추가, `ContentRepositoryImpl.kt`에 구현 (DAO 호출 + 매핑), `FakeContentRepository`에도 구현
+- 완료 기준: 빌드 성공, Repository 인터페이스 및 구현체 모두 컴파일
+
+### Step 5.3: SearchScreen Screen + State + Event 정의
+- 구현: `features/search/SearchScreen.kt` — @Parcelize data object SearchScreen : Screen, State (query, results, isLoading, eventSink), sealed interface Event (OnQueryChanged, OnResultClicked, OnBackClicked)
+- 완료 기준: 빌드 성공, HomeScreen 패턴과 동일한 구조
+
+### Step 5.4: SearchPresenter 구현 (디바운스 키워드 검색)
+- 구현: `features/search/SearchPresenter.kt` — @CircuitInject Presenter, ContentRepository 주입, Navigator 주입, 검색 쿼리 디바운스 (300ms), 빈 쿼리 시 빈 결과 반환
+- 완료 기준: 빌드 성공, @CircuitInject + @AssistedInject 패턴 사용
+
+### Step 5.5: 검색 UI 작성 (검색바 + 결과 리스트)
+- 구현: `features/search/Search.kt` — @CircuitInject Search Composable, Material 3 SearchBar + 결과 LazyColumn (ContentCard 재사용), 빈 상태 표시, @Preview 포함
+- 완료 기준: 빌드 성공, @Preview 렌더링 가능
+
+### Step 5.6: 홈 화면에서 검색 화면 Navigation 연결
+- 구현: `HomeScreen.kt`에 OnSearchClicked Event 추가, `HomePresenter.kt`에서 navigator.goTo(SearchScreen) 호출, `Home.kt` 상단에 검색바(탭하면 SearchScreen 이동) 추가
+- 완료 기준: 빌드 성공, 홈 화면에서 검색 화면으로 이동 가능
+
+### Step 5.7: 키워드 검색 Presenter 단위 테스트
+- 구현: `SearchPresenterTest.kt` — Molecule + Turbine 기반, 키워드 검색 결과 표시 테스트, 빈 쿼리 시 빈 결과 테스트, 결과 클릭 시 DetailScreen 이동 테스트, FakeContentRepository 사용
+- 완료 기준: `./gradlew test` 모든 테스트 통과
+
+### Step 5.8: Room Entity에 embedding 컬럼 추가 (DB 마이그레이션)
+- 구현: `ContentEntity.kt`에 `embedding: String?` 컬럼 추가 (Float 배열을 JSON 문자열로 저장), `StashDatabase.kt` 버전 2로 업데이트 + Migration(1, 2) 정의, `SavedContent.kt`에 `embedding: List<Float>?` 필드 추가, 매퍼에 embedding 변환 로직 추가
+- 완료 기준: 빌드 성공, Room 마이그레이션 오류 없음
+
+### Step 5.9: ONNX Runtime 모델 로딩 서비스 구현
+- 구현: `ml/embedding/OnnxModelService.kt` — ONNX Runtime 세션 초기화, assets에서 모델 파일 로딩, 세션 생명주기 관리 (Application scope Singleton), `di/MlModule.kt`에 Hilt 바인딩
+- 완료 기준: 빌드 성공, Hilt로 주입 가능
+
+### Step 5.10: 텍스트 임베딩 서비스 구현
+- 구현: `ml/embedding/TextEmbeddingService.kt` — 텍스트 → 토큰화 → ONNX 추론 → Float 배열 반환, 인터페이스 `domain/repository/EmbeddingService.kt` 정의 (순수 Kotlin), 구현체에서 OnnxModelService 주입
+- 완료 기준: 빌드 성공, 인터페이스 + 구현체 분리
+
+### Step 5.11: 저장 시 임베딩 자동 생성 WorkManager 작업 추가
+- 구현: `share/EmbeddingWorker.kt` — contentId를 입력으로 받아 콘텐츠 title+description 텍스트 임베딩 생성 → DB 업데이트, `MetadataWorker` 완료 후 체이닝
+- 완료 기준: 빌드 성공, WorkManager 작업 enqueue 동작
+
+### Step 5.12: 벡터 유사도 검색 서비스 구현
+- 구현: `ml/vectorsearch/VectorSearchService.kt` — 쿼리 텍스트 임베딩 → DB의 모든 임베딩과 코사인 유사도 계산 → 상위 N개 결과 반환, 인터페이스 `domain/repository/VectorSearchService.kt` 정의
+- 완료 기준: 빌드 성공, 인터페이스 + 구현체 분리
+
+### Step 5.13: SearchPresenter에 시맨틱 검색 통합
+- 구현: `SearchPresenter.kt`에 VectorSearchService 주입, 키워드 검색 + 시맨틱 검색 병렬 실행, 결과 병합 랭킹 (키워드 매치 우선, 시맨틱 유사도 보조), State에 searchMode (keyword/semantic/hybrid) 추가
+- 완료 기준: 빌드 성공, 두 검색 결과가 병합되어 표시
+
+### Step 5.14: 시맨틱 검색 단위 테스트
+- 구현: `VectorSearchServiceTest.kt` — 코사인 유사도 계산 정확성 테스트, `EmbeddingServiceTest.kt` — Fake ONNX 모델로 임베딩 생성 테스트, `SearchPresenterTest.kt` 보완 — 시맨틱 검색 결과 병합 테스트
+- 완료 기준: `./gradlew test` 모든 테스트 통과
+
+### Step 5.15: Phase 5 전체 빌드 + 테스트 검증
+- 구현: Phase 5 전체 결과물에 대한 최종 빌드 및 테스트 실행, 검색 흐름 전체 동작 확인
+- 완료 기준: `./gradlew assembleDebug` + `./gradlew test` 모두 성공
 
 ---
 
