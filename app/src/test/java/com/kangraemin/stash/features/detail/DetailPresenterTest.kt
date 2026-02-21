@@ -71,7 +71,7 @@ class DetailPresenterTest {
         }
 
         @Test
-        fun `존재하지 않는 contentId면 content가 null이다`() = runTest {
+        fun `존재하지 않는 contentId면 에러 상태가 설정된다`() = runTest {
             val repository = FakeContentRepository()
             val navigator = FakeNavigator()
             val presenter = DetailPresenter(
@@ -85,6 +85,27 @@ class DetailPresenterTest {
             }.test {
                 val state = expectMostRecentItem()
                 assertNull(state.content)
+                assertNotNull(state.error)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+        @Test
+        fun `데이터 로딩 실패 시 에러 상태가 설정된다`() = runTest {
+            val repository = FakeContentRepository(shouldThrow = true)
+            val navigator = FakeNavigator()
+            val presenter = DetailPresenter(
+                navigator = navigator,
+                screen = DetailScreen(contentId = "test-1"),
+                contentRepository = repository,
+            )
+
+            moleculeFlow(RecompositionMode.Immediate) {
+                presenter.present()
+            }.test {
+                val state = expectMostRecentItem()
+                assertNull(state.content)
+                assertNotNull(state.error)
                 cancelAndIgnoreRemainingEvents()
             }
         }

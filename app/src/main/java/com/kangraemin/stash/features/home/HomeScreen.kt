@@ -12,6 +12,7 @@ data object HomeScreen : Screen, Parcelable {
     data class State(
         val contents: List<SavedContent> = emptyList(),
         val selectedFilter: ContentType? = null,
+        val error: String? = null,
         val eventSink: (Event) -> Unit = {},
     ) : CircuitUiState
 

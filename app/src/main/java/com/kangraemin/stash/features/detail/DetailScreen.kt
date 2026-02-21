@@ -11,6 +11,7 @@ data class DetailScreen(val contentId: String) : Screen, Parcelable {
     data class State(
         val content: SavedContent? = null,
         val showDeleteDialog: Boolean = false,
+        val error: String? = null,
         val eventSink: (Event) -> Unit = {},
     ) : CircuitUiState
 

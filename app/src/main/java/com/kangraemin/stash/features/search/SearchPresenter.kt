@@ -39,16 +39,24 @@ class SearchPresenter @AssistedInject constructor(
         var query by remember { mutableStateOf("") }
         var results by remember { mutableStateOf<List<SavedContent>>(emptyList()) }
         var isLoading by remember { mutableStateOf(false) }
+        var error by remember { mutableStateOf<String?>(null) }
 
         LaunchedEffect(query) {
             if (query.isBlank()) {
                 results = emptyList()
                 isLoading = false
+                error = null
                 return@LaunchedEffect
             }
             isLoading = true
+            error = null
             delay(300)
-            results = hybridSearch(query)
+            try {
+                results = hybridSearch(query)
+            } catch (e: Exception) {
+                error = e.message ?: "검색 중 오류가 발생했습니다"
+                results = emptyList()
+            }
             isLoading = false
         }
 
@@ -56,6 +64,7 @@ class SearchPresenter @AssistedInject constructor(
             query = query,
             results = results,
             isLoading = isLoading,
+            error = error,
         ) { event ->
             when (event) {
                 is SearchScreen.Event.OnQueryChanged -> query = event.query

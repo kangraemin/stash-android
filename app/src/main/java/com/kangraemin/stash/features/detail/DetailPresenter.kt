@@ -34,15 +34,26 @@ class DetailPresenter @AssistedInject constructor(
     override fun present(): DetailScreen.State {
         var content by remember { mutableStateOf<SavedContent?>(null) }
         var showDeleteDialog by remember { mutableStateOf(false) }
+        var error by remember { mutableStateOf<String?>(null) }
         val scope = rememberCoroutineScope()
 
         LaunchedEffect(Unit) {
-            content = contentRepository.getById(screen.contentId)
+            try {
+                val loaded = contentRepository.getById(screen.contentId)
+                if (loaded != null) {
+                    content = loaded
+                } else {
+                    error = "콘텐츠를 찾을 수 없습니다"
+                }
+            } catch (e: Exception) {
+                error = e.message ?: "콘텐츠를 불러올 수 없습니다"
+            }
         }
 
         return DetailScreen.State(
             content = content,
             showDeleteDialog = showDeleteDialog,
+            error = error,
         ) { event ->
             when (event) {
                 is DetailScreen.Event.OnOpenClicked -> Unit

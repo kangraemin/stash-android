@@ -12,6 +12,7 @@ data object SearchScreen : Screen, Parcelable {
         val query: String = "",
         val results: List<SavedContent> = emptyList(),
         val isLoading: Boolean = false,
+        val error: String? = null,
         val eventSink: (Event) -> Unit = {},
     ) : CircuitUiState
 

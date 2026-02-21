@@ -34,9 +34,14 @@ class HomePresenter @AssistedInject constructor(
     override fun present(): HomeScreen.State {
         var contents by remember { mutableStateOf<List<SavedContent>>(emptyList()) }
         var selectedFilter by remember { mutableStateOf<ContentType?>(null) }
+        var error by remember { mutableStateOf<String?>(null) }
 
         LaunchedEffect(Unit) {
-            contentRepository.getAll().collect { contents = it }
+            try {
+                contentRepository.getAll().collect { contents = it }
+            } catch (e: Exception) {
+                error = e.message ?: "콘텐츠를 불러올 수 없습니다"
+            }
         }
 
         return HomeScreen.State(
@@ -44,6 +49,7 @@ class HomePresenter @AssistedInject constructor(
                 contents.filter { it.contentType == filter }
             } ?: contents,
             selectedFilter = selectedFilter,
+            error = error,
         ) { event ->
             when (event) {
                 is HomeScreen.Event.OnFilterSelected -> selectedFilter = event.type
