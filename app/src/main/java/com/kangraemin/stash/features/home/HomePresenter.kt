@@ -11,6 +11,7 @@ import com.kangraemin.stash.domain.model.SavedContent
 import com.kangraemin.stash.domain.repository.ContentRepository
 import com.kangraemin.stash.features.detail.DetailScreen
 import com.kangraemin.stash.features.search.SearchScreen
+import com.kangraemin.stash.features.settings.SettingsScreen
 import com.slack.circuit.codegen.annotations.CircuitInject
 import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
@@ -58,6 +59,9 @@ class HomePresenter @AssistedInject constructor(
                 }
                 is HomeScreen.Event.OnSearchClicked -> {
                     navigator.goTo(SearchScreen)
+                }
+                is HomeScreen.Event.OnSettingsClicked -> {
+                    navigator.goTo(SettingsScreen)
                 }
             }
         }

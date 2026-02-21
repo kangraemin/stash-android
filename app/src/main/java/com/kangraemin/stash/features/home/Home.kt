@@ -16,10 +16,15 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -32,42 +37,60 @@ import com.slack.circuit.codegen.annotations.CircuitInject
 import dagger.hilt.components.SingletonComponent
 import java.time.Instant
 
+@OptIn(ExperimentalMaterial3Api::class)
 @CircuitInject(HomeScreen::class, SingletonComponent::class)
 @Composable
 fun Home(state: HomeScreen.State, modifier: Modifier = Modifier) {
-    Column(modifier = modifier.fillMaxSize()) {
-        SearchBar(
-            onClick = { state.eventSink(HomeScreen.Event.OnSearchClicked) },
-        )
-        FilterChips(
-            selected = state.selectedFilter,
-            onSelected = { state.eventSink(HomeScreen.Event.OnFilterSelected(it)) },
-        )
-        if (state.contents.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(32.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = "저장된 콘텐츠가 없습니다.\n다른 앱에서 공유하여 콘텐츠를 저장해보세요.",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-        } else {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(2),
-                contentPadding = PaddingValues(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                items(state.contents, key = { it.id }) { content ->
-                    ContentCard(
-                        content = content,
-                        onClick = { state.eventSink(HomeScreen.Event.OnContentClicked(content)) },
+    Scaffold(
+        modifier = modifier,
+        topBar = {
+            TopAppBar(
+                title = { Text("Stash") },
+                actions = {
+                    IconButton(onClick = { state.eventSink(HomeScreen.Event.OnSettingsClicked) }) {
+                        Icon(
+                            imageVector = Icons.Default.Settings,
+                            contentDescription = "설정",
+                        )
+                    }
+                },
+            )
+        },
+    ) { padding ->
+        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
+            SearchBar(
+                onClick = { state.eventSink(HomeScreen.Event.OnSearchClicked) },
+            )
+            FilterChips(
+                selected = state.selectedFilter,
+                onSelected = { state.eventSink(HomeScreen.Event.OnFilterSelected(it)) },
+            )
+            if (state.contents.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(32.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "저장된 콘텐츠가 없습니다.\n다른 앱에서 공유하여 콘텐츠를 저장해보세요.",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
+                }
+            } else {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(2),
+                    contentPadding = PaddingValues(16.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    items(state.contents, key = { it.id }) { content ->
+                        ContentCard(
+                            content = content,
+                            onClick = { state.eventSink(HomeScreen.Event.OnContentClicked(content)) },
+                        )
+                    }
                 }
             }
         }
