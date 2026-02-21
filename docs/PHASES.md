@@ -132,18 +132,33 @@ Stash Android 앱의 단계별 개발 계획.
 ---
 
 ## Phase 3: Share Intent 수신
-상태: 대기 ⏳
+상태: 진행중 🔄
 
 > 외부 앱에서 공유된 URL을 Stash에 저장하는 기능. Android Share Intent 수신 처리.
 
-### 예상 Step (Phase 진입 시 상세화)
-- URL 파싱 유틸리티 (도메인 → ContentType 매핑)
-- ShareActivity 구현 (Intent 수신 + URL 추출)
-- 저장 로직 연결 (ShareActivity → Repository)
-- Intent Filter 매니페스트 등록
-- WorkManager로 메타데이터 추출 백그라운드 작업 설정
-- 메타데이터 추출 Worker 구현 (OG 태그 파싱)
-- Share Intent 흐름 테스트
+### Step 3.1: URL 파싱 유틸리티
+- 구현: `domain/contentparsing/UrlParser.kt` — URL 문자열에서 도메인 추출, 도메인 → ContentType 매핑 (youtube.com→YOUTUBE, instagram.com→INSTAGRAM, map.naver.com/naver.me→NAVER_MAP, maps.google.com/maps.app.goo.gl→GOOGLE_MAP, coupang.com/coupa.ng→COUPANG, 기타→WEB)
+- 완료 기준: 빌드 성공, 순수 Kotlin (외부 의존 없음)
+
+### Step 3.2: URL 파싱 단위 테스트
+- 구현: `UrlParserTest.kt` — 각 ContentType별 URL 매핑 테스트, 엣지 케이스 (잘못된 URL, 빈 문자열, 쿼리 파라미터 포함 URL 등)
+- 완료 기준: `./gradlew test` 모든 테스트 통과
+
+### Step 3.3: ShareActivity 구현
+- 구현: `share/ShareActivity.kt` — Intent.ACTION_SEND 수신, intent.getStringExtra(Intent.EXTRA_TEXT)로 URL 추출, @AndroidEntryPoint (Hilt), AndroidManifest.xml에 ShareActivity 등록 + intent-filter (ACTION_SEND, CATEGORY_DEFAULT, text/plain)
+- 완료 기준: 빌드 성공, 매니페스트에 intent-filter 등록 확인
+
+### Step 3.4: 저장 로직 연결
+- 구현: ShareActivity에서 ContentRepository.save() 호출, UrlParser로 ContentType 결정, SavedContent 생성 (URL + ContentType + 임시 제목), 저장 완료 후 토스트 "저장 완료" 표시 + Activity 종료
+- 완료 기준: 빌드 성공, Share Intent → DB 저장 → 토스트 → 종료 흐름 동작
+
+### Step 3.5: WorkManager 메타데이터 추출 설정
+- 구현: `share/MetadataWorker.kt` — WorkManager OneTimeWorkRequest, contentId를 inputData로 전달, OG 태그 파싱 (title, description, thumbnailUrl 추출), Repository로 메타데이터 업데이트, `domain/repository/ContentRepository.kt`에 update 메서드 추가
+- 완료 기준: 빌드 성공, WorkManager 작업 enqueue 동작
+
+### Step 3.6: Share Intent 흐름 테스트
+- 구현: `UrlParserTest` 보완 (3.2에서 작성), `ShareActivity` 로직 테스트 (Repository 저장 호출 검증), WorkManager 작업 enqueue 검증
+- 완료 기준: `./gradlew test` 모든 테스트 통과
 
 ---
 
