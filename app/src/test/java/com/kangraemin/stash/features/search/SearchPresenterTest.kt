@@ -6,6 +6,7 @@ import app.cash.turbine.test
 import com.kangraemin.stash.domain.model.ContentType
 import com.kangraemin.stash.domain.model.SavedContent
 import com.kangraemin.stash.domain.repository.FakeContentRepository
+import com.kangraemin.stash.domain.repository.VectorSearchService
 import com.kangraemin.stash.features.detail.DetailScreen
 import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.screen.PopResult
@@ -41,6 +42,10 @@ class SearchPresenterTest {
         createdAt = Instant.ofEpochMilli(1700000001000L),
     )
 
+    private class FakeVectorSearchService : VectorSearchService {
+        override suspend fun searchBySimilarity(query: String, topK: Int): List<SavedContent> = emptyList()
+    }
+
     private class FakeNavigator : Navigator {
         val screens = mutableListOf<Screen>()
         var popCount = 0
@@ -67,7 +72,7 @@ class SearchPresenterTest {
         fun `키워드 입력 시 매칭되는 결과가 표시된다`() = runTest {
             val repository = FakeContentRepository(listOf(webContent, youtubeContent))
             val navigator = FakeNavigator()
-            val presenter = SearchPresenter(navigator = navigator, contentRepository = repository)
+            val presenter = SearchPresenter(navigator = navigator, contentRepository = repository, vectorSearchService = FakeVectorSearchService())
 
             moleculeFlow(RecompositionMode.Immediate) {
                 presenter.present()
@@ -89,7 +94,7 @@ class SearchPresenterTest {
         fun `빈 쿼리 입력 시 빈 결과가 반환된다`() = runTest {
             val repository = FakeContentRepository(listOf(webContent, youtubeContent))
             val navigator = FakeNavigator()
-            val presenter = SearchPresenter(navigator = navigator, contentRepository = repository)
+            val presenter = SearchPresenter(navigator = navigator, contentRepository = repository, vectorSearchService = FakeVectorSearchService())
 
             moleculeFlow(RecompositionMode.Immediate) {
                 presenter.present()
@@ -105,7 +110,7 @@ class SearchPresenterTest {
         fun `쿼리 변경 시 새로운 결과로 업데이트된다`() = runTest {
             val repository = FakeContentRepository(listOf(webContent, youtubeContent))
             val navigator = FakeNavigator()
-            val presenter = SearchPresenter(navigator = navigator, contentRepository = repository)
+            val presenter = SearchPresenter(navigator = navigator, contentRepository = repository, vectorSearchService = FakeVectorSearchService())
 
             moleculeFlow(RecompositionMode.Immediate) {
                 presenter.present()
@@ -136,7 +141,7 @@ class SearchPresenterTest {
         fun `검색 후 쿼리를 비우면 결과가 초기화된다`() = runTest {
             val repository = FakeContentRepository(listOf(webContent))
             val navigator = FakeNavigator()
-            val presenter = SearchPresenter(navigator = navigator, contentRepository = repository)
+            val presenter = SearchPresenter(navigator = navigator, contentRepository = repository, vectorSearchService = FakeVectorSearchService())
 
             moleculeFlow(RecompositionMode.Immediate) {
                 presenter.present()
@@ -161,7 +166,7 @@ class SearchPresenterTest {
         fun `description에 포함된 키워드로도 검색된다`() = runTest {
             val repository = FakeContentRepository(listOf(webContent, youtubeContent))
             val navigator = FakeNavigator()
-            val presenter = SearchPresenter(navigator = navigator, contentRepository = repository)
+            val presenter = SearchPresenter(navigator = navigator, contentRepository = repository, vectorSearchService = FakeVectorSearchService())
 
             moleculeFlow(RecompositionMode.Immediate) {
                 presenter.present()
@@ -183,7 +188,7 @@ class SearchPresenterTest {
         fun `매칭 결과가 없으면 빈 목록이 반환된다`() = runTest {
             val repository = FakeContentRepository(listOf(webContent, youtubeContent))
             val navigator = FakeNavigator()
-            val presenter = SearchPresenter(navigator = navigator, contentRepository = repository)
+            val presenter = SearchPresenter(navigator = navigator, contentRepository = repository, vectorSearchService = FakeVectorSearchService())
 
             moleculeFlow(RecompositionMode.Immediate) {
                 presenter.present()
@@ -207,7 +212,7 @@ class SearchPresenterTest {
         fun `OnResultClicked 시 DetailScreen으로 이동한다`() = runTest {
             val repository = FakeContentRepository(listOf(webContent))
             val navigator = FakeNavigator()
-            val presenter = SearchPresenter(navigator = navigator, contentRepository = repository)
+            val presenter = SearchPresenter(navigator = navigator, contentRepository = repository, vectorSearchService = FakeVectorSearchService())
 
             moleculeFlow(RecompositionMode.Immediate) {
                 presenter.present()
@@ -228,7 +233,7 @@ class SearchPresenterTest {
         fun `OnBackClicked 시 navigator pop이 호출된다`() = runTest {
             val repository = FakeContentRepository()
             val navigator = FakeNavigator()
-            val presenter = SearchPresenter(navigator = navigator, contentRepository = repository)
+            val presenter = SearchPresenter(navigator = navigator, contentRepository = repository, vectorSearchService = FakeVectorSearchService())
 
             moleculeFlow(RecompositionMode.Immediate) {
                 presenter.present()

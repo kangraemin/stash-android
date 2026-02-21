@@ -8,6 +8,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.kangraemin.stash.domain.model.SavedContent
 import com.kangraemin.stash.domain.repository.ContentRepository
+import com.kangraemin.stash.domain.repository.VectorSearchService
 import com.kangraemin.stash.features.detail.DetailScreen
 import com.slack.circuit.codegen.annotations.CircuitInject
 import com.slack.circuit.runtime.Navigator
@@ -16,11 +17,15 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 
 class SearchPresenter @AssistedInject constructor(
     @Assisted private val navigator: Navigator,
     private val contentRepository: ContentRepository,
+    private val vectorSearchService: VectorSearchService,
 ) : Presenter<SearchScreen.State> {
 
     @CircuitInject(SearchScreen::class, SingletonComponent::class)
@@ -43,10 +48,8 @@ class SearchPresenter @AssistedInject constructor(
             }
             isLoading = true
             delay(300)
-            contentRepository.searchByKeyword(query).collect {
-                results = it
-                isLoading = false
-            }
+            results = hybridSearch(query)
+            isLoading = false
         }
 
         return SearchScreen.State(
@@ -62,5 +65,34 @@ class SearchPresenter @AssistedInject constructor(
                 is SearchScreen.Event.OnBackClicked -> navigator.pop()
             }
         }
+    }
+
+    private suspend fun hybridSearch(query: String): List<SavedContent> = coroutineScope {
+        val keywordDeferred = async {
+            runCatching { contentRepository.searchByKeyword(query).first() }.getOrDefault(emptyList())
+        }
+        val semanticDeferred = async {
+            runCatching { vectorSearchService.searchBySimilarity(query) }.getOrDefault(emptyList())
+        }
+
+        val keywordResults = keywordDeferred.await()
+        val semanticResults = semanticDeferred.await()
+
+        mergeResults(keywordResults, semanticResults)
+    }
+
+    private fun mergeResults(
+        keywordResults: List<SavedContent>,
+        semanticResults: List<SavedContent>,
+    ): List<SavedContent> {
+        val seen = keywordResults.map { it.id }.toMutableSet()
+        val merged = keywordResults.toMutableList()
+        for (content in semanticResults) {
+            if (content.id !in seen) {
+                seen.add(content.id)
+                merged.add(content)
+            }
+        }
+        return merged
     }
 }
