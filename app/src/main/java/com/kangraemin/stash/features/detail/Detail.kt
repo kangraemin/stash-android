@@ -28,10 +28,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.kangraemin.stash.domain.contentparsing.DeepLinkHandler
 import com.kangraemin.stash.domain.model.ContentType
 import com.kangraemin.stash.domain.model.SavedContent
 import com.kangraemin.stash.ui.theme.StashTheme
@@ -59,6 +61,7 @@ fun Detail(state: DetailScreen.State, modifier: Modifier = Modifier) {
             )
         },
     ) { paddingValues ->
+        val context = LocalContext.current
         val content = state.content
         if (content == null) {
             Box(
@@ -72,7 +75,9 @@ fun Detail(state: DetailScreen.State, modifier: Modifier = Modifier) {
         } else {
             DetailContent(
                 content = content,
-                onOpenClicked = { state.eventSink(DetailScreen.Event.OnOpenClicked) },
+                onOpenClicked = {
+                    DeepLinkHandler.open(context, content.url, content.contentType)
+                },
                 onDeleteClicked = { state.eventSink(DetailScreen.Event.OnDeleteClicked) },
                 modifier = Modifier.padding(paddingValues),
             )

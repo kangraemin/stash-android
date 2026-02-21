@@ -45,9 +45,7 @@ class DetailPresenter @AssistedInject constructor(
             showDeleteDialog = showDeleteDialog,
         ) { event ->
             when (event) {
-                is DetailScreen.Event.OnOpenClicked -> {
-                    // TODO: Step 4.7에서 딥링크 연결
-                }
+                is DetailScreen.Event.OnOpenClicked -> Unit
                 is DetailScreen.Event.OnDeleteClicked -> showDeleteDialog = true
                 is DetailScreen.Event.OnDeleteConfirmed -> {
                     scope.launch {
