@@ -29,9 +29,9 @@ Thumbs.db
 .externalNativeBuild/
 .cxx/
 
-# Worklogs
-.worklogs/.snapshot
-
 # Whitelist
 !.worklogs/
 !.worklogs/**
+
+# Worklogs snapshot (must come after whitelist)
+.worklogs/.snapshot
