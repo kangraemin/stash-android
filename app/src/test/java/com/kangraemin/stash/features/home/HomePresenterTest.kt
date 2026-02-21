@@ -6,6 +6,11 @@ import app.cash.turbine.test
 import com.kangraemin.stash.domain.model.ContentType
 import com.kangraemin.stash.domain.model.SavedContent
 import com.kangraemin.stash.domain.repository.FakeContentRepository
+import com.slack.circuit.runtime.Navigator
+import com.slack.circuit.runtime.screen.PopResult
+import com.slack.circuit.runtime.screen.Screen
+import kotlinx.collections.immutable.ImmutableList
+import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
@@ -15,6 +20,22 @@ import org.junit.jupiter.api.Test
 import java.time.Instant
 
 class HomePresenterTest {
+
+    private val fakeNavigator = object : Navigator {
+        val screens = mutableListOf<Screen>()
+        override fun goTo(screen: Screen): Boolean {
+            screens.add(screen)
+            return true
+        }
+        override fun pop(result: PopResult?): Screen? = null
+        override fun resetRoot(
+            newRoot: Screen,
+            saveState: Boolean,
+            restoreState: Boolean,
+        ): ImmutableList<Screen> = persistentListOf()
+        override fun peek(): Screen? = null
+        override fun peekBackStack(): ImmutableList<Screen> = persistentListOf()
+    }
 
     private val webContent = SavedContent(
         id = "web-1",
@@ -37,7 +58,7 @@ class HomePresenterTest {
         @Test
         fun `콘텐츠 로드 시 목록에 표시된다`() = runTest {
             val repository = FakeContentRepository(listOf(webContent, youtubeContent))
-            val presenter = HomePresenter(contentRepository = repository)
+            val presenter = HomePresenter(navigator = fakeNavigator, contentRepository = repository)
 
             moleculeFlow(RecompositionMode.Immediate) {
                 presenter.present()
@@ -51,7 +72,7 @@ class HomePresenterTest {
         @Test
         fun `콘텐츠가 없으면 빈 목록이 반환된다`() = runTest {
             val repository = FakeContentRepository()
-            val presenter = HomePresenter(contentRepository = repository)
+            val presenter = HomePresenter(navigator = fakeNavigator, contentRepository = repository)
 
             moleculeFlow(RecompositionMode.Immediate) {
                 presenter.present()
@@ -68,7 +89,7 @@ class HomePresenterTest {
         @Test
         fun `필터 선택 시 해당 타입만 표시된다`() = runTest {
             val repository = FakeContentRepository(listOf(webContent, youtubeContent))
-            val presenter = HomePresenter(contentRepository = repository)
+            val presenter = HomePresenter(navigator = fakeNavigator, contentRepository = repository)
 
             moleculeFlow(RecompositionMode.Immediate) {
                 presenter.present()
@@ -87,7 +108,7 @@ class HomePresenterTest {
         @Test
         fun `전체 필터 선택 시 모든 콘텐츠가 표시된다`() = runTest {
             val repository = FakeContentRepository(listOf(webContent, youtubeContent))
-            val presenter = HomePresenter(contentRepository = repository)
+            val presenter = HomePresenter(navigator = fakeNavigator, contentRepository = repository)
 
             moleculeFlow(RecompositionMode.Immediate) {
                 presenter.present()

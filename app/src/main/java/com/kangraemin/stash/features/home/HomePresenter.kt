@@ -9,15 +9,25 @@ import androidx.compose.runtime.setValue
 import com.kangraemin.stash.domain.model.ContentType
 import com.kangraemin.stash.domain.model.SavedContent
 import com.kangraemin.stash.domain.repository.ContentRepository
+import com.kangraemin.stash.features.detail.DetailScreen
 import com.slack.circuit.codegen.annotations.CircuitInject
+import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedFactory
+import dagger.assisted.AssistedInject
 import dagger.hilt.components.SingletonComponent
-import javax.inject.Inject
 
-@CircuitInject(HomeScreen::class, SingletonComponent::class)
-class HomePresenter @Inject constructor(
+class HomePresenter @AssistedInject constructor(
+    @Assisted private val navigator: Navigator,
     private val contentRepository: ContentRepository,
 ) : Presenter<HomeScreen.State> {
+
+    @CircuitInject(HomeScreen::class, SingletonComponent::class)
+    @AssistedFactory
+    fun interface Factory {
+        fun create(navigator: Navigator): HomePresenter
+    }
 
     @Composable
     override fun present(): HomeScreen.State {
@@ -37,7 +47,7 @@ class HomePresenter @Inject constructor(
             when (event) {
                 is HomeScreen.Event.OnFilterSelected -> selectedFilter = event.type
                 is HomeScreen.Event.OnContentClicked -> {
-                    // TODO: navigator.goTo(DetailScreen(event.content.id)) — DetailScreen은 추후 구현
+                    navigator.goTo(DetailScreen(event.content.id))
                 }
             }
         }
