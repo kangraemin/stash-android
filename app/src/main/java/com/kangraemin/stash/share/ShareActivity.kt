@@ -4,10 +4,21 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.lifecycle.lifecycleScope
+import com.kangraemin.stash.domain.contentparsing.UrlParser
+import com.kangraemin.stash.domain.model.SavedContent
+import com.kangraemin.stash.domain.repository.ContentRepository
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
+import java.time.Instant
+import java.util.UUID
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class ShareActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var contentRepository: ContentRepository
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -19,8 +30,24 @@ class ShareActivity : ComponentActivity() {
             return
         }
 
-        // TODO: Step 3.4에서 저장 로직 연결
-        finish()
+        saveContent(url)
+    }
+
+    private fun saveContent(url: String) {
+        val contentType = UrlParser.parseContentType(url)
+        val content = SavedContent(
+            id = UUID.randomUUID().toString(),
+            url = url,
+            contentType = contentType,
+            title = url,
+            createdAt = Instant.now(),
+        )
+
+        lifecycleScope.launch {
+            contentRepository.save(content)
+            Toast.makeText(this@ShareActivity, "저장 완료", Toast.LENGTH_SHORT).show()
+            finish()
+        }
     }
 
     private fun extractUrl(): String? {
