@@ -1,12 +1,37 @@
+# Build
 *.iml
-.gradle
-/local.properties
-/.idea
-.DS_Store
-/build
-/captures
-.externalNativeBuild
-.cxx
+.gradle/
+build/
+/app/build/
+/captures/
+
+# IDE
+/.idea/
+
+# Local
 local.properties
-/app/build
+
+# Signing
+*.jks
+*.keystore
+
+# Secrets
+.env
+Secrets/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Android
+*.apk
+*.aab
+.externalNativeBuild/
+.cxx/
+
+# Worklogs
 .worklogs/.snapshot
+
+# Whitelist
+!.worklogs/
+!.worklogs/**
