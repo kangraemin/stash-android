@@ -5,7 +5,7 @@ Stash Android 앱의 단계별 개발 계획.
 ---
 
 ## Phase 0: 프로젝트 셋업
-상태: 진행중 🔄
+상태: 완료 ✅
 
 ### Step 0.1: Gradle 프로젝트 생성
 - 구현: Android 프로젝트 생성 (Empty Compose Activity), `com.kangraemin.stash` 패키지, Kotlin DSL
