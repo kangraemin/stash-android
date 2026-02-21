@@ -50,21 +50,49 @@ Stash Android 앱의 단계별 개발 계획.
 ---
 
 ## Phase 1: 도메인 모델 + 데이터 계층
-상태: 대기 ⏳
+상태: 진행중 🔄
 
 > 핵심 도메인 모델을 정의하고, Room DB로 영속화하며, Repository 패턴으로 데이터 접근을 추상화한다.
 
-### 예상 Step (Phase 진입 시 상세화)
-- `ContentType` enum 정의
-- `SavedContent` 도메인 모델 정의
-- `ContentRepository` 인터페이스 정의
-- Room Entity (`ContentEntity`) 정의
-- Room DAO (`ContentDao`) 정의
-- Room Database 정의
-- Entity ↔ 도메인 모델 Mapper 작성
-- `ContentRepositoryImpl` 구현
-- Repository Hilt Module 바인딩
-- Repository 단위 테스트
+### Step 1.1: ContentType enum 정의
+- 구현: `domain/model/ContentType.kt` — YOUTUBE, INSTAGRAM, NAVER_MAP, GOOGLE_MAP, COUPANG, WEB 등 콘텐츠 타입 열거
+- 완료 기준: 빌드 성공, ARCHITECTURE.md의 콘텐츠 타입 표와 일치
+
+### Step 1.2: SavedContent 도메인 모델 정의
+- 구현: `domain/model/SavedContent.kt` — id, title, url, contentType, thumbnailUrl, description, createdAt 등 핵심 필드 정의 (data class)
+- 완료 기준: 빌드 성공, 테스트용 mock companion 포함
+
+### Step 1.3: ContentRepository 인터페이스 정의
+- 구현: `domain/repository/ContentRepository.kt` — save, getAll (Flow), getById, delete 메서드 선언
+- 완료 기준: 빌드 성공, 순수 Kotlin (외부 의존 없음)
+
+### Step 1.4: Room Entity 정의
+- 구현: `data/room/ContentEntity.kt` — Room @Entity 어노테이션, 테이블명, 컬럼 정의 (SavedContent 필드 매핑)
+- 완료 기준: 빌드 성공, Room 어노테이션 정상 적용
+
+### Step 1.5: Room DAO 정의
+- 구현: `data/room/ContentDao.kt` — @Insert, @Query (getAll, getById, search), @Delete 메서드 정의
+- 완료 기준: 빌드 성공, Flow 반환 타입 사용
+
+### Step 1.6: Room Database 정의
+- 구현: `data/room/StashDatabase.kt` — @Database 어노테이션, entities 등록, DAO 접근 메서드, 버전 1
+- 완료 기준: 빌드 성공, Room 컴파일러 오류 없음
+
+### Step 1.7: Entity-도메인 모델 Mapper 작성
+- 구현: `data/mapper/ContentMapper.kt` — ContentEntity ↔ SavedContent 변환 함수 (확장 함수 또는 클래스)
+- 완료 기준: 빌드 성공, 양방향 변환 가능
+
+### Step 1.8: ContentRepositoryImpl 구현
+- 구현: `data/repository/ContentRepositoryImpl.kt` — ContentRepository 인터페이스 구현, ContentDao + ContentMapper 주입, Flow 매핑
+- 완료 기준: 빌드 성공, @Inject constructor 사용
+
+### Step 1.9: Repository Hilt Module 바인딩
+- 구현: `di/RepositoryModule.kt` — @Module @InstallIn(SingletonComponent) + @Binds로 ContentRepositoryImpl → ContentRepository 바인딩, `di/DatabaseModule.kt` — Room Database + DAO @Provides
+- 완료 기준: 빌드 성공, Hilt 컴파일 오류 없음
+
+### Step 1.10: Repository 단위 테스트
+- 구현: `ContentMapperTest` (매핑 정확성), `FakeContentRepository` (테스트용 Fake 구현), `ContentRepositoryImplTest` (Room In-Memory DB 기반 통합 테스트)
+- 완료 기준: `./gradlew test` 모든 테스트 통과
 
 ---
 
