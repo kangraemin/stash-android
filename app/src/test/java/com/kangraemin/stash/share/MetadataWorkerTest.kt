@@ -15,65 +15,107 @@ class MetadataWorkerTest {
 
     private lateinit var repository: FakeContentRepository
 
-    private val testContent = SavedContent(
-        id = "test-id",
-        title = "https://example.com",
-        url = "https://example.com",
-        contentType = ContentType.WEB,
-        thumbnailUrl = null,
-        description = null,
-        createdAt = Instant.ofEpochMilli(1700000000000L),
-    )
-
     @BeforeEach
     fun setUp() {
-        repository = FakeContentRepository(listOf(testContent))
+        repository = FakeContentRepository()
     }
 
     @Nested
-    inner class `메타데이터 업데이트 로직` {
+    inner class `메타데이터 업데이트 흐름` {
         @Test
-        fun `contentId로 콘텐츠를 조회할 수 있다`() = runTest {
-            val content = repository.getById("test-id")
+        fun `메타데이터 업데이트 시 title이 갱신된다`() = runTest {
+            val content = createContent("test-id", "https://example.com")
+            repository.save(content)
 
-            assertEquals(testContent, content)
-        }
-
-        @Test
-        fun `존재하지 않는 contentId는 null을 반환한다`() = runTest {
-            val content = repository.getById("non-existent")
-
-            assertNull(content)
-        }
-
-        @Test
-        fun `메타데이터를 업데이트하면 제목이 변경된다`() = runTest {
-            val updated = testContent.copy(
+            val updated = content.copy(
                 title = "Example Page Title",
-                description = "A description from OG tags",
-                thumbnailUrl = "https://example.com/og-image.jpg",
+                description = "Example description",
+                thumbnailUrl = "https://example.com/image.jpg",
             )
-
             repository.update(updated)
 
             val result = repository.getById("test-id")
             assertEquals("Example Page Title", result?.title)
-            assertEquals("A description from OG tags", result?.description)
-            assertEquals("https://example.com/og-image.jpg", result?.thumbnailUrl)
+            assertEquals("Example description", result?.description)
+            assertEquals("https://example.com/image.jpg", result?.thumbnailUrl)
         }
 
         @Test
-        fun `메타데이터 업데이트 시 다른 필드는 변경되지 않는다`() = runTest {
-            val updated = testContent.copy(
-                title = "Updated Title",
+        fun `메타데이터 업데이트 시 기존 URL과 contentType은 유지된다`() = runTest {
+            val content = createContent(
+                id = "test-id",
+                url = "https://www.youtube.com/watch?v=abc",
+                contentType = ContentType.YOUTUBE,
             )
+            repository.save(content)
 
+            val updated = content.copy(
+                title = "YouTube Video Title",
+                description = "Video description",
+            )
             repository.update(updated)
 
             val result = repository.getById("test-id")
-            assertEquals("https://example.com", result?.url)
-            assertEquals(ContentType.WEB, result?.contentType)
-            assertEquals(Instant.ofEpochMilli(1700000000000L), result?.createdAt)
+            assertEquals("https://www.youtube.com/watch?v=abc", result?.url)
+            assertEquals(ContentType.YOUTUBE, result?.contentType)
+        }
+
+        @Test
+        fun `존재하지 않는 contentId로 업데이트하면 변경되지 않는다`() = runTest {
+            val content = createContent("test-id", "https://example.com")
+            repository.save(content)
+
+            val nonExistent = content.copy(id = "non-existent", title = "Updated")
+            repository.update(nonExistent)
+
+            val result = repository.getById("test-id")
+            assertEquals("https://example.com", result?.title)
+            assertNull(repository.getById("non-existent"))
         }
     }
+
+    @Nested
+    inner class `부분 메타데이터 업데이트` {
+        @Test
+        fun `title만 있는 경우 title만 업데이트된다`() = runTest {
+            val content = createContent("test-id", "https://example.com")
+            repository.save(content)
+
+            val updated = content.copy(title = "Page Title")
+            repository.update(updated)
+
+            val result = repository.getById("test-id")
+            assertEquals("Page Title", result?.title)
+            assertNull(result?.description)
+            assertNull(result?.thumbnailUrl)
+        }
+
+        @Test
+        fun `thumbnailUrl만 있는 경우 thumbnailUrl만 업데이트된다`() = runTest {
+            val content = createContent("test-id", "https://example.com")
+            repository.save(content)
+
+            val updated = content.copy(
+                thumbnailUrl = "https://example.com/thumb.jpg",
+            )
+            repository.update(updated)
+
+            val result = repository.getById("test-id")
+            assertEquals("https://example.com/thumb.jpg", result?.thumbnailUrl)
+        }
+    }
+
+    private fun createContent(
+        id: String,
+        url: String,
+        contentType: ContentType = ContentType.WEB,
+    ) = SavedContent(
+        id = id,
+        title = url,
+        url = url,
+        contentType = contentType,
+        thumbnailUrl = null,
+        description = null,
+        createdAt = Instant.now(),
+    )
 }
