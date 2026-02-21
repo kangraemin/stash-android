@@ -32,7 +32,7 @@ fun ErrorStateView(
     ) {
         Icon(
             imageVector = Icons.Filled.Warning,
-            contentDescription = null,
+            contentDescription = "오류",
             modifier = Modifier.size(64.dp),
             tint = MaterialTheme.colorScheme.error,
         )

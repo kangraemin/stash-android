@@ -32,7 +32,7 @@ fun EmptyStateView(
     ) {
         Icon(
             imageVector = icon,
-            contentDescription = null,
+            contentDescription = "빈 상태",
             modifier = Modifier.size(64.dp),
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
         )

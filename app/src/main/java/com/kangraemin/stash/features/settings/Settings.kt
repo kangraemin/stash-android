@@ -23,6 +23,8 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.kangraemin.stash.domain.model.ThemeMode
@@ -89,7 +91,7 @@ private fun ThemeModeSection(
     Text(
         text = "테마",
         style = MaterialTheme.typography.titleMedium,
-        modifier = Modifier.padding(vertical = 8.dp),
+        modifier = Modifier.padding(vertical = 8.dp).semantics { heading() },
     )
     ThemeMode.entries.forEach { mode ->
         Row(
@@ -123,7 +125,7 @@ private fun DataManagementSection(
     Text(
         text = "데이터 관리",
         style = MaterialTheme.typography.titleMedium,
-        modifier = Modifier.padding(vertical = 8.dp),
+        modifier = Modifier.padding(vertical = 8.dp).semantics { heading() },
     )
     Row(
         modifier = Modifier
@@ -145,7 +147,7 @@ private fun AppInfoSection() {
     Text(
         text = "앱 정보",
         style = MaterialTheme.typography.titleMedium,
-        modifier = Modifier.padding(vertical = 8.dp),
+        modifier = Modifier.padding(vertical = 8.dp).semantics { heading() },
     )
     Text(
         text = "버전 1.0",
