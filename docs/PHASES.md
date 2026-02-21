@@ -163,19 +163,45 @@ Stash Android 앱의 단계별 개발 계획.
 ---
 
 ## Phase 4: 상세 화면 + 딥링크
-상태: 대기 ⏳
+상태: 진행중 🔄
 
 > 저장된 콘텐츠의 상세 정보 표시 + 원본 앱/웹으로 이동하는 딥링크 처리.
 
-### 예상 Step (Phase 진입 시 상세화)
-- `DetailScreen` Screen + State + Event 정의
-- `DetailPresenter` 구현 (콘텐츠 상세 로드)
-- 상세 화면 UI 작성 (소스별 레이아웃)
-- 딥링크 유틸리티 (ContentType별 Intent/CustomTab 분기)
-- Chrome Custom Tab 연동
-- 홈 → 상세 Navigation 연결
-- 콘텐츠 삭제 기능
-- DetailPresenter 테스트
+### Step 4.1: DetailScreen Screen 정의
+- 구현: `features/detail/DetailScreen.kt` — @Parcelize data class DetailScreen(val contentId: String) : Screen, 내부에 State (content, showDeleteDialog, eventSink) + sealed interface Event (OnOpenClicked, OnDeleteClicked, OnDeleteConfirmed, OnDeleteDismissed, OnBackClicked) 정의
+- 완료 기준: 빌드 성공, HomeScreen 패턴과 일치
+
+### Step 4.2: DetailPresenter 구현
+- 구현: `features/detail/DetailPresenter.kt` — @CircuitInject Presenter, ContentRepository 주입, Navigator 주입, getById(contentId)로 콘텐츠 로드, 삭제 다이얼로그 상태 관리, 삭제 시 Repository.delete() 호출 후 navigator.pop()
+- 완료 기준: 빌드 성공, @CircuitInject + @Inject constructor 사용
+
+### Step 4.3: 상세 화면 UI 작성
+- 구현: `features/detail/Detail.kt` — @CircuitInject Detail Composable, 썸네일(Coil) + 제목 + 설명 + URL + 콘텐츠 타입 표시, "열기" 버튼 + "삭제" 버튼, 삭제 확인 AlertDialog, @Preview 포함
+- 완료 기준: 빌드 성공, @Preview 렌더링 가능
+
+### Step 4.4: 홈 → 상세 Navigation 연결
+- 구현: `HomePresenter.kt`에 Navigator 주입, OnContentClicked 이벤트에서 navigator.goTo(DetailScreen(content.id)) 호출 (기존 TODO 주석 교체)
+- 완료 기준: 빌드 성공, HomePresenter에서 DetailScreen으로 네비게이션 코드 존재
+
+### Step 4.5: Chrome Custom Tab 의존성 추가
+- 구현: `gradle/libs.versions.toml`에 `androidx.browser` 추가, `build.gradle.kts`에 implementation 추가
+- 완료 기준: `./gradlew assembleDebug` 빌드 성공
+
+### Step 4.6: 딥링크 유틸리티 구현
+- 구현: `domain/contentparsing/DeepLinkHandler.kt` — ContentType별 Intent 생성 (YOUTUBE/INSTAGRAM/COUPANG은 앱 Intent 시도 후 폴백 브라우저, NAVER_MAP은 nmap:// scheme + Play Store 폴백, GOOGLE_MAP은 앱 Intent + 폴백 브라우저, WEB은 Chrome Custom Tab), Context를 파라미터로 받아 startActivity 호출
+- 완료 기준: 빌드 성공
+
+### Step 4.7: 상세 화면에서 딥링크 연결
+- 구현: DetailPresenter의 OnOpenClicked 이벤트에서 DeepLinkHandler 호출 연결 (DeepLinkHandler를 Presenter에 주입하거나 Event로 URL 전달 후 UI에서 호출)
+- 완료 기준: 빌드 성공, "열기" 버튼이 DeepLinkHandler와 연결됨
+
+### Step 4.8: DetailPresenter 단위 테스트
+- 구현: `DetailPresenterTest.kt` — Molecule + Turbine 기반, 콘텐츠 로드 테스트, 삭제 플로우 테스트 (다이얼로그 표시 → 확인 → 삭제 → pop), 뒤로가기 테스트, FakeContentRepository 사용
+- 완료 기준: `./gradlew test` 모든 테스트 통과
+
+### Step 4.9: DeepLinkHandler 단위 테스트
+- 구현: `DeepLinkHandlerTest.kt` — 각 ContentType별 Intent 생성 검증 (URI scheme, package 등)
+- 완료 기준: `./gradlew test` 모든 테스트 통과
 
 ---
 
