@@ -38,4 +38,14 @@ class FakeContentRepository(
             removeAll { it.id == id }
         }
     }
+
+    override fun searchByKeyword(query: String): Flow<List<SavedContent>> {
+        return _contents.map { contents ->
+            contents.filter { content ->
+                content.title.contains(query, ignoreCase = true) ||
+                    (content.description?.contains(query, ignoreCase = true) == true) ||
+                    content.url.contains(query, ignoreCase = true)
+            }
+        }
+    }
 }

@@ -173,4 +173,14 @@ private class FakeContentDao : ContentDao {
             removeAll { it.id == id }
         }
     }
+
+    override fun searchByKeyword(query: String): Flow<List<ContentEntity>> {
+        return entities.map { list ->
+            list.filter { entity ->
+                entity.title.contains(query, ignoreCase = true) ||
+                    (entity.description?.contains(query, ignoreCase = true) == true) ||
+                    entity.url.contains(query, ignoreCase = true)
+            }.sortedByDescending { it.createdAt }
+        }
+    }
 }

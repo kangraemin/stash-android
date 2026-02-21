@@ -34,4 +34,10 @@ class ContentRepositoryImpl @Inject constructor(
     override suspend fun delete(id: String) {
         contentDao.deleteById(id)
     }
+
+    override fun searchByKeyword(query: String): Flow<List<SavedContent>> {
+        return contentDao.searchByKeyword(query).map { entities ->
+            entities.map { it.toDomain() }
+        }
+    }
 }

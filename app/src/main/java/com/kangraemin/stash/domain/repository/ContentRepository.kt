@@ -9,4 +9,5 @@ interface ContentRepository {
     fun getAll(): Flow<List<SavedContent>>
     suspend fun getById(id: String): SavedContent?
     suspend fun delete(id: String)
+    fun searchByKeyword(query: String): Flow<List<SavedContent>>
 }
