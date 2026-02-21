@@ -228,6 +228,93 @@ class SearchPresenterTest {
     }
 
     @Nested
+    inner class `하이브리드 검색` {
+        @Test
+        fun `시맨틱 검색 결과가 키워드 검색 결과에 병합된다`() = runTest {
+            val semanticOnlyContent = SavedContent(
+                id = "semantic-1",
+                title = "시맨틱 전용",
+                url = "https://semantic.com",
+                contentType = ContentType.WEB,
+                createdAt = Instant.ofEpochMilli(1700000002000L),
+            )
+            val repository = FakeContentRepository(listOf(webContent, youtubeContent))
+            val navigator = FakeNavigator()
+            val vectorSearch = object : VectorSearchService {
+                override suspend fun searchBySimilarity(query: String, topK: Int) = listOf(semanticOnlyContent)
+            }
+            val presenter = SearchPresenter(navigator = navigator, contentRepository = repository, vectorSearchService = vectorSearch)
+
+            moleculeFlow(RecompositionMode.Immediate) {
+                presenter.present()
+            }.test {
+                var state = expectMostRecentItem()
+                state.eventSink(SearchScreen.Event.OnQueryChanged("웹"))
+
+                testScheduler.advanceTimeBy(350)
+                testScheduler.runCurrent()
+
+                state = expectMostRecentItem()
+                assertTrue(state.results.size >= 2)
+                assertEquals("web-1", state.results.first().id)
+                assertTrue(state.results.any { it.id == "semantic-1" })
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+        @Test
+        fun `시맨틱 검색 실패 시 키워드 결과만 반환된다`() = runTest {
+            val repository = FakeContentRepository(listOf(webContent))
+            val navigator = FakeNavigator()
+            val failingVectorSearch = object : VectorSearchService {
+                override suspend fun searchBySimilarity(query: String, topK: Int): List<SavedContent> {
+                    throw RuntimeException("ONNX 모델 로딩 실패")
+                }
+            }
+            val presenter = SearchPresenter(navigator = navigator, contentRepository = repository, vectorSearchService = failingVectorSearch)
+
+            moleculeFlow(RecompositionMode.Immediate) {
+                presenter.present()
+            }.test {
+                var state = expectMostRecentItem()
+                state.eventSink(SearchScreen.Event.OnQueryChanged("웹"))
+
+                testScheduler.advanceTimeBy(350)
+                testScheduler.runCurrent()
+
+                state = expectMostRecentItem()
+                assertEquals(1, state.results.size)
+                assertEquals("web-1", state.results.first().id)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+        @Test
+        fun `키워드와 시맨틱 검색 결과가 중복되면 한 번만 표시된다`() = runTest {
+            val repository = FakeContentRepository(listOf(webContent))
+            val navigator = FakeNavigator()
+            val vectorSearch = object : VectorSearchService {
+                override suspend fun searchBySimilarity(query: String, topK: Int) = listOf(webContent)
+            }
+            val presenter = SearchPresenter(navigator = navigator, contentRepository = repository, vectorSearchService = vectorSearch)
+
+            moleculeFlow(RecompositionMode.Immediate) {
+                presenter.present()
+            }.test {
+                var state = expectMostRecentItem()
+                state.eventSink(SearchScreen.Event.OnQueryChanged("웹"))
+
+                testScheduler.advanceTimeBy(350)
+                testScheduler.runCurrent()
+
+                state = expectMostRecentItem()
+                assertEquals(1, state.results.size)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+    }
+
+    @Nested
     inner class `뒤로가기` {
         @Test
         fun `OnBackClicked 시 navigator pop이 호출된다`() = runTest {
