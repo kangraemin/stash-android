@@ -55,10 +55,16 @@ class ShareActivity : ComponentActivity() {
     }
 
     private fun enqueueMetadataExtraction(contentId: String) {
-        val workRequest = OneTimeWorkRequestBuilder<MetadataWorker>()
+        val metadataRequest = OneTimeWorkRequestBuilder<MetadataWorker>()
             .setInputData(workDataOf(MetadataWorker.KEY_CONTENT_ID to contentId))
             .build()
-        WorkManager.getInstance(this).enqueue(workRequest)
+        val embeddingRequest = OneTimeWorkRequestBuilder<EmbeddingWorker>()
+            .setInputData(workDataOf(EmbeddingWorker.KEY_CONTENT_ID to contentId))
+            .build()
+        WorkManager.getInstance(this)
+            .beginWith(metadataRequest)
+            .then(embeddingRequest)
+            .enqueue()
     }
 
     private fun extractUrl(): String? {
