@@ -133,6 +133,53 @@ class SearchPresenterTest {
         }
 
         @Test
+        fun `검색 후 쿼리를 비우면 결과가 초기화된다`() = runTest {
+            val repository = FakeContentRepository(listOf(webContent))
+            val navigator = FakeNavigator()
+            val presenter = SearchPresenter(navigator = navigator, contentRepository = repository)
+
+            moleculeFlow(RecompositionMode.Immediate) {
+                presenter.present()
+            }.test {
+                var state = expectMostRecentItem()
+                state.eventSink(SearchScreen.Event.OnQueryChanged("웹"))
+
+                testScheduler.advanceTimeBy(350)
+                testScheduler.runCurrent()
+
+                state = expectMostRecentItem()
+                assertEquals(1, state.results.size)
+
+                state.eventSink(SearchScreen.Event.OnQueryChanged(""))
+                state = expectMostRecentItem()
+                assertTrue(state.results.isEmpty())
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+        @Test
+        fun `description에 포함된 키워드로도 검색된다`() = runTest {
+            val repository = FakeContentRepository(listOf(webContent, youtubeContent))
+            val navigator = FakeNavigator()
+            val presenter = SearchPresenter(navigator = navigator, contentRepository = repository)
+
+            moleculeFlow(RecompositionMode.Immediate) {
+                presenter.present()
+            }.test {
+                var state = expectMostRecentItem()
+                state.eventSink(SearchScreen.Event.OnQueryChanged("웹 페이지 설명"))
+
+                testScheduler.advanceTimeBy(350)
+                testScheduler.runCurrent()
+
+                state = expectMostRecentItem()
+                assertEquals(1, state.results.size)
+                assertEquals("web-1", state.results.first().id)
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+
+        @Test
         fun `매칭 결과가 없으면 빈 목록이 반환된다`() = runTest {
             val repository = FakeContentRepository(listOf(webContent, youtubeContent))
             val navigator = FakeNavigator()
