@@ -18,5 +18,6 @@ data object HomeScreen : Screen, Parcelable {
     sealed interface Event {
         data class OnFilterSelected(val type: ContentType?) : Event
         data class OnContentClicked(val content: SavedContent) : Event
+        data object OnSearchClicked : Event
     }
 }
