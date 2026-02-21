@@ -24,6 +24,9 @@ interface ContentDao {
     @Query("DELETE FROM saved_contents WHERE id = :id")
     suspend fun deleteById(id: String)
 
+    @Query("DELETE FROM saved_contents")
+    suspend fun deleteAll()
+
     @Query(
         "SELECT * FROM saved_contents WHERE title LIKE '%' || :query || '%' " +
             "OR description LIKE '%' || :query || '%' " +

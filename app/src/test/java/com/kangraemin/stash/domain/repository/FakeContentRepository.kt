@@ -39,6 +39,10 @@ class FakeContentRepository(
         }
     }
 
+    override suspend fun deleteAll() {
+        _contents.value = mutableListOf()
+    }
+
     override fun searchByKeyword(query: String): Flow<List<SavedContent>> {
         return _contents.map { contents ->
             contents.filter { content ->

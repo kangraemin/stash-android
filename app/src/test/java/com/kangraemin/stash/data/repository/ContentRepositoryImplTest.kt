@@ -174,6 +174,10 @@ private class FakeContentDao : ContentDao {
         }
     }
 
+    override suspend fun deleteAll() {
+        entities.value = emptyList()
+    }
+
     override fun searchByKeyword(query: String): Flow<List<ContentEntity>> {
         return entities.map { list ->
             list.filter { entity ->
