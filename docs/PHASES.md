@@ -97,18 +97,37 @@ Stash Android 앱의 단계별 개발 계획.
 ---
 
 ## Phase 2: 홈 화면
-상태: 대기 ⏳
+상태: 진행중 🔄
 
 > 메인 화면 구현. 저장된 콘텐츠를 2열 그리드로 표시하고, 콘텐츠 타입 필터 칩으로 분류한다.
 
-### 예상 Step (Phase 진입 시 상세화)
-- `HomeScreen` Screen 정의 (Navigation key + State + Event)
-- `HomePresenter` 구현 (콘텐츠 로드 + 필터링)
-- 콘텐츠 카드 Composable 작성 (소스별 레이아웃)
-- 필터 칩 Composable 작성
-- 홈 화면 전체 UI 조립 (그리드 + 필터 + 빈 상태)
-- HomePresenter 테스트
-- Home UI Preview 작성
+### Step 2.1: HomeScreen Screen 정의
+- 구현: `features/home/HomeScreen.kt` — @Parcelize data object HomeScreen : Screen, 내부에 State (contents, selectedFilter, eventSink) + sealed interface Event (OnFilterSelected, OnContentClicked) 정의
+- 완료 기준: 빌드 성공, COMPOSE_GUIDE.md의 Screen 패턴과 일치
+
+### Step 2.2: HomePresenter 구현
+- 구현: `features/home/HomePresenter.kt` — @CircuitInject Presenter, ContentRepository 주입, getAll() Flow 수집, 필터링 로직, eventSink 처리
+- 완료 기준: 빌드 성공, @CircuitInject + @Inject constructor 사용
+
+### Step 2.3: 콘텐츠 카드 Composable 작성
+- 구현: `features/home/ContentCard.kt` — ContentCard Composable, SavedContent를 받아 썸네일 + 제목 + 소스 표시, Coil로 이미지 로딩, Material 3 Card 사용
+- 완료 기준: 빌드 성공, @Preview 포함
+
+### Step 2.4: 필터 칩 Composable 작성
+- 구현: `features/home/FilterChips.kt` — FilterChips Composable, ContentType 기반 필터 칩 행 (전체/영상/장소/쇼핑/아티클/인스타), Material 3 FilterChip 사용, 선택 상태 표시
+- 완료 기준: 빌드 성공, @Preview 포함
+
+### Step 2.5: 홈 화면 전체 UI 조립
+- 구현: `features/home/Home.kt` — @CircuitInject Home Composable, FilterChips + LazyVerticalGrid(2열) + ContentCard 조합, 빈 상태 표시, PlaceholderScreen을 HomeScreen으로 교체 (MainActivity backStack 초기 화면 변경)
+- 완료 기준: 빌드 성공, 빈 상태/콘텐츠 목록 모두 표시 가능
+
+### Step 2.6: HomePresenter 테스트
+- 구현: `HomePresenterTest.kt` — Molecule + Turbine 기반, 콘텐츠 로드 테스트, 필터 선택 테스트, 빈 목록 테스트, FakeContentRepository 사용
+- 완료 기준: `./gradlew test` 모든 테스트 통과
+
+### Step 2.7: Home UI Preview 작성
+- 구현: Home, ContentCard, FilterChips 각각의 @Preview 함수 정리, StashTheme 적용, 다양한 상태 (빈 목록, 필터 선택, 콘텐츠 있음)
+- 완료 기준: 빌드 성공, 모든 Preview 렌더링 가능
 
 ---
 
