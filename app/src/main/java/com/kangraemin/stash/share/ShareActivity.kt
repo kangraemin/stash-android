@@ -5,6 +5,9 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.lifecycle.lifecycleScope
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
+import androidx.work.workDataOf
 import com.kangraemin.stash.domain.contentparsing.UrlParser
 import com.kangraemin.stash.domain.model.SavedContent
 import com.kangraemin.stash.domain.repository.ContentRepository
@@ -45,9 +48,17 @@ class ShareActivity : ComponentActivity() {
 
         lifecycleScope.launch {
             contentRepository.save(content)
+            enqueueMetadataExtraction(content.id)
             Toast.makeText(this@ShareActivity, "저장 완료", Toast.LENGTH_SHORT).show()
             finish()
         }
+    }
+
+    private fun enqueueMetadataExtraction(contentId: String) {
+        val workRequest = OneTimeWorkRequestBuilder<MetadataWorker>()
+            .setInputData(workDataOf(MetadataWorker.KEY_CONTENT_ID to contentId))
+            .build()
+        WorkManager.getInstance(this).enqueue(workRequest)
     }
 
     private fun extractUrl(): String? {

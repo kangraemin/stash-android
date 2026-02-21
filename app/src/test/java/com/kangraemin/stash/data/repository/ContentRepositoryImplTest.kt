@@ -153,6 +153,13 @@ private class FakeContentDao : ContentDao {
         }
     }
 
+    override suspend fun update(entity: ContentEntity) {
+        entities.value = entities.value.toMutableList().apply {
+            val index = indexOfFirst { it.id == entity.id }
+            if (index >= 0) set(index, entity)
+        }
+    }
+
     override fun getAll(): Flow<List<ContentEntity>> {
         return entities.map { it.sortedByDescending { e -> e.createdAt } }
     }

@@ -18,6 +18,13 @@ class FakeContentRepository(
         }
     }
 
+    override suspend fun update(content: SavedContent) {
+        _contents.value = _contents.value.toMutableList().apply {
+            val index = indexOfFirst { it.id == content.id }
+            if (index >= 0) set(index, content)
+        }
+    }
+
     override fun getAll(): Flow<List<SavedContent>> {
         return _contents.map { it.toList() }
     }

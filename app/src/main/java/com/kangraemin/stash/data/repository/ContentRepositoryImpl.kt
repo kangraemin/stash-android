@@ -17,6 +17,10 @@ class ContentRepositoryImpl @Inject constructor(
         contentDao.insert(content.toEntity())
     }
 
+    override suspend fun update(content: SavedContent) {
+        contentDao.update(content.toEntity())
+    }
+
     override fun getAll(): Flow<List<SavedContent>> {
         return contentDao.getAll().map { entities ->
             entities.map { it.toDomain() }
