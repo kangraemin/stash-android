@@ -132,7 +132,7 @@ Stash Android 앱의 단계별 개발 계획.
 ---
 
 ## Phase 3: Share Intent 수신
-상태: 진행중 🔄
+상태: 완료 ✅
 
 > 외부 앱에서 공유된 URL을 Stash에 저장하는 기능. Android Share Intent 수신 처리.
 
