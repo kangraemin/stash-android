@@ -13,6 +13,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Nested
@@ -78,6 +79,24 @@ class HomePresenterTest {
                 presenter.present()
             }.test {
                 val state = expectMostRecentItem()
+                assertTrue(state.contents.isEmpty())
+                cancelAndIgnoreRemainingEvents()
+            }
+        }
+    }
+
+    @Nested
+    inner class `에러 처리` {
+        @Test
+        fun `데이터 로딩 실패 시 error 상태가 설정된다`() = runTest {
+            val repository = FakeContentRepository(shouldThrow = true)
+            val presenter = HomePresenter(navigator = fakeNavigator, contentRepository = repository)
+
+            moleculeFlow(RecompositionMode.Immediate) {
+                presenter.present()
+            }.test {
+                val state = expectMostRecentItem()
+                assertNotNull(state.error)
                 assertTrue(state.contents.isEmpty())
                 cancelAndIgnoreRemainingEvents()
             }

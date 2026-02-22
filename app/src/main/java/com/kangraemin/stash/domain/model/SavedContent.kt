@@ -10,6 +10,7 @@ data class SavedContent(
     val thumbnailUrl: String? = null,
     val description: String? = null,
     val createdAt: Instant,
+    val embedding: List<Float>? = null,
 ) {
     companion object {
         val mock get() = SavedContent(

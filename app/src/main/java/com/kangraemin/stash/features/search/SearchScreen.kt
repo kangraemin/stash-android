@@ -1,4 +1,4 @@
-package com.kangraemin.stash.features.detail
+package com.kangraemin.stash.features.search
 
 import android.os.Parcelable
 import com.kangraemin.stash.domain.model.SavedContent
@@ -8,20 +8,19 @@ import com.slack.circuit.runtime.screen.Screen
 import kotlinx.parcelize.Parcelize
 
 @Parcelize
-data class DetailScreen(val contentId: String) : Screen, Parcelable {
+data object SearchScreen : Screen, Parcelable {
     @Immutable
     data class State(
-        val content: SavedContent? = null,
-        val showDeleteDialog: Boolean = false,
+        val query: String = "",
+        val results: List<SavedContent> = emptyList(),
+        val isLoading: Boolean = false,
         val error: String? = null,
         val eventSink: (Event) -> Unit = {},
     ) : CircuitUiState
 
     sealed interface Event {
-        data object OnOpenClicked : Event
-        data object OnDeleteClicked : Event
-        data object OnDeleteConfirmed : Event
-        data object OnDeleteDismissed : Event
+        data class OnQueryChanged(val query: String) : Event
+        data class OnResultClicked(val content: SavedContent) : Event
         data object OnBackClicked : Event
     }
 }

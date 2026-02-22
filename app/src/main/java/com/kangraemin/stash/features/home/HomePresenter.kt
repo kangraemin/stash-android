@@ -10,6 +10,8 @@ import com.kangraemin.stash.domain.model.ContentType
 import com.kangraemin.stash.domain.model.SavedContent
 import com.kangraemin.stash.domain.repository.ContentRepository
 import com.kangraemin.stash.features.detail.DetailScreen
+import com.kangraemin.stash.features.search.SearchScreen
+import com.kangraemin.stash.features.settings.SettingsScreen
 import com.slack.circuit.codegen.annotations.CircuitInject
 import com.slack.circuit.runtime.Navigator
 import com.slack.circuit.runtime.presenter.Presenter
@@ -33,9 +35,14 @@ class HomePresenter @AssistedInject constructor(
     override fun present(): HomeScreen.State {
         var contents by remember { mutableStateOf<List<SavedContent>>(emptyList()) }
         var selectedFilter by remember { mutableStateOf<ContentType?>(null) }
+        var error by remember { mutableStateOf<String?>(null) }
 
         LaunchedEffect(Unit) {
-            contentRepository.getAll().collect { contents = it }
+            try {
+                contentRepository.getAll().collect { contents = it }
+            } catch (e: Exception) {
+                error = e.message ?: "콘텐츠를 불러올 수 없습니다"
+            }
         }
 
         return HomeScreen.State(
@@ -43,11 +50,18 @@ class HomePresenter @AssistedInject constructor(
                 contents.filter { it.contentType == filter }
             } ?: contents,
             selectedFilter = selectedFilter,
+            error = error,
         ) { event ->
             when (event) {
                 is HomeScreen.Event.OnFilterSelected -> selectedFilter = event.type
                 is HomeScreen.Event.OnContentClicked -> {
                     navigator.goTo(DetailScreen(event.content.id))
+                }
+                is HomeScreen.Event.OnSearchClicked -> {
+                    navigator.goTo(SearchScreen)
+                }
+                is HomeScreen.Event.OnSettingsClicked -> {
+                    navigator.goTo(SettingsScreen)
                 }
             }
         }

@@ -85,6 +85,9 @@ dependencies {
     // Browser (Chrome Custom Tab)
     implementation(libs.androidx.browser)
 
+    // DataStore
+    implementation(libs.androidx.datastore.preferences)
+
     // Coil
     implementation(libs.coil.compose)
 

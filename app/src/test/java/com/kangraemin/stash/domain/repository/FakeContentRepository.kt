@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.map
 
 class FakeContentRepository(
     contents: List<SavedContent> = emptyList(),
+    var shouldThrow: Boolean = false,
 ) : ContentRepository {
 
     private val _contents = MutableStateFlow(contents.toMutableList())
@@ -26,16 +27,32 @@ class FakeContentRepository(
     }
 
     override fun getAll(): Flow<List<SavedContent>> {
+        if (shouldThrow) throw RuntimeException("데이터 로딩 실패")
         return _contents.map { it.toList() }
     }
 
     override suspend fun getById(id: String): SavedContent? {
+        if (shouldThrow) throw RuntimeException("데이터 로딩 실패")
         return _contents.value.find { it.id == id }
     }
 
     override suspend fun delete(id: String) {
         _contents.value = _contents.value.toMutableList().apply {
             removeAll { it.id == id }
+        }
+    }
+
+    override suspend fun deleteAll() {
+        _contents.value = mutableListOf()
+    }
+
+    override fun searchByKeyword(query: String): Flow<List<SavedContent>> {
+        return _contents.map { contents ->
+            contents.filter { content ->
+                content.title.contains(query, ignoreCase = true) ||
+                    (content.description?.contains(query, ignoreCase = true) == true) ||
+                    content.url.contains(query, ignoreCase = true)
+            }
         }
     }
 }
